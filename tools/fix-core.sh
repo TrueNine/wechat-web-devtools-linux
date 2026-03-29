@@ -25,6 +25,7 @@ tmp_dir="$root_dir/tmp/core"
 mkdir -p $tmp_dir
 unpack_script="$root_dir/tools/wxvpkg_unpack.js"
 pack_script="$root_dir/tools/wxvpkg_pack.js"
+patch_script="$root_dir/tools/patch-core.js"
  
 echo "Fix Core"
 # unpack 文件 到 路径
@@ -62,6 +63,9 @@ if [[ "$WINE" != 'true' ]];then
   timeStamp=`date -d "$current" +%s`
   echo $timeStamp > "${package_dir}/.build_time"
 fi
+
+notice "patch core"
+node "$patch_script" "$tmp_dir/core.wxvpkg"
 
 # pack 路径 到 文件
 notice "pack"

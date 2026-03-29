@@ -13,10 +13,14 @@ build_dir="$root_dir/tmp/AUR"
 mkdir -p "$tmp_dir"
 
 # 获取开发工具版本号与MD5
-VERSION_DATA=$( cat "$root_dir/conf/devtools_v" )
-VERSION_DATA=(${VERSION_DATA//,/ })
-TARGET_VERSION=${VERSION_DATA[0]}
-TARGET_VERSION_MD5=${VERSION_DATA[1]}
+TARGET_VERSION=$(node "$root_dir/tools/parse-config.js" --get-devtools-version)
+TARGET_VERSION_URL="https://servicewechat.com/wxa-dev-logic/download_redirect?type=x64&from=mpwiki&download_version=${TARGET_VERSION//./}&version_type=1"
+TARGET_VERSION_MD5=$(curl -s -I -L "$TARGET_VERSION_URL" | tr -d '\r' | sed -n 's/^X-COS-META-MD5: //Ip' | tail -n 1)
+
+if [ -z "$TARGET_VERSION_MD5" ]; then
+  fail "无法获取微信开发者工具 MD5"
+  exit 1
+fi
 
 echo "BUILD_VERSION: $BUILD_VERSION"
 if [ -n "$1" ];then
@@ -37,9 +41,7 @@ fi
 # 非及时构建
 if [ "$BUILD_VERSION" != "continuous" ];then
   notice "检查版本号 -> $BUILD_VERSION"
-  VERSION_DATA=$( cat "$root_dir/conf/devtools_v" )
-  VERSION_DATA=(${VERSION_DATA//,/ })
-  DEVTOOLS_VERSION=${VERSION_DATA[0]}
+  DEVTOOLS_VERSION=${TARGET_VERSION}
   INPUT_VERSION=$( echo $BUILD_VERSION | sed 's/v//' | sed 's/-.*//' )
   if [[ "$INPUT_VERSION" != "$DEVTOOLS_VERSION" ]];then
     fail "传入版本号与实际版本号不一致！"
